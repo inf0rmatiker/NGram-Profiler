@@ -1,23 +1,41 @@
 package profiles.second;
 
 import java.io.IOException;
-import org.apache.hadoop.io.NullWritable;
+import java.util.PriorityQueue;
+import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Reducer;
+import utils.OutputLimiter;
+import utils.Unigram;
 
 
 /**
- * Reducer: Input to the reducer is the output from the mapper. It receives word, list<count> pairs.
- * Sums up individual counts per given word. Emits <word, total count> pairs.
+ * ============== PROFILE TWO REDUCER =====================
+ * Outputs the first 500 unigrams for each article,
+ * sorted by occurrence frequency.
  */
-public class NGramReducer extends Reducer<Text, NullWritable, Text, NullWritable> {
+public class NGramReducer extends Reducer<IntWritable, Text, IntWritable, Text> implements
+    OutputLimiter {
 
-  int counter = 0;
+  private int currentOutput = 0;
 
   @Override
-  protected void reduce(Text key, Iterable<NullWritable> values, Context context) throws IOException, InterruptedException {
-    if (this.counter++ < 500) {
-      context.write(key, NullWritable.get());
+  protected void reduce(IntWritable key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
+    PriorityQueue<Unigram> sortedUnigrams = new PriorityQueue<>();
+
+    for (Text value: values) {
+      sortedUnigrams.add(new Unigram(value));
     }
+
+    while (!sortedUnigrams.isEmpty() && isWithinLimit()) {
+      context.write(key, sortedUnigrams.poll().getText());
+      currentOutput++;
+    }
+
+  }
+
+  @Override
+  public boolean isWithinLimit() {
+    return currentOutput < OUTPUT_LIMIT;
   }
 }

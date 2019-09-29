@@ -1,11 +1,9 @@
-package profiles.first;
+package profiles.third;
 
-import org.apache.hadoop.io.IntWritable;
+import java.io.IOException;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Reducer;
-
-import java.io.IOException;
 
 
 /**

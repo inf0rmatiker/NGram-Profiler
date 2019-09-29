@@ -12,6 +12,7 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import java.io.IOException;
 
 /**
+ * ================== PROFILE ONE DRIVER ======================
  * This is the main class. Hadoop will invoke the main method of this class.
  *
  * Emit unigrams for all the given Wikipedia articles, sorted alphabetically, without duplicates.
@@ -21,7 +22,7 @@ import java.io.IOException;
  *
  * :::::Configuration:::::::
  * Only uses 1 reducer, since the shuffle phase sorts by key, and we want the reducer to have the first
- * 500.
+ * 500 alphabetically sorted words. No combiner is used.
  */
 public class NGramJob {
   public static void main(String[] args) {
@@ -33,8 +34,6 @@ public class NGramJob {
       job.setJarByClass(NGramJob.class);
       // Mapper
       job.setMapperClass(NGramMapper.class);
-      // Combiner. We use the reducer as the combiner in this case.
-      job.setCombinerClass(NGramCombiner.class);
       // Reducer
       job.setReducerClass(NGramReducer.class);
       // Outputs from the Mapper.

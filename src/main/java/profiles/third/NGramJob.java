@@ -1,4 +1,4 @@
-package profiles.second;
+package profiles.third;
 
 import java.io.IOException;
 import org.apache.hadoop.conf.Configuration;
@@ -11,11 +11,17 @@ import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 /**
- * ================ PROFILE TWO DRIVER ========================
+ * ================== PROFILE ONE DRIVER ======================
  * This is the main class. Hadoop will invoke the main method of this class.
  *
- * :::::::Configuration:::::::::
- * Currently not using combiner for testing...
+ * Emit unigrams for all the given Wikipedia articles, sorted alphabetically, without duplicates.
+ * Punctuation is removed, case is ignored, stop-words are considered as well as gender.
+ *
+ * Only emits the first 500 unigrams to final output.
+ *
+ * :::::Configuration:::::::
+ * Only uses 1 reducer, since the shuffle phase sorts by key, and we want the reducer to have the first
+ * 500 alphabetically sorted words. No combiner is used.
  */
 public class NGramJob {
   public static void main(String[] args) {
@@ -27,22 +33,19 @@ public class NGramJob {
       job.setJarByClass(NGramJob.class);
       // Mapper
       job.setMapperClass(NGramMapper.class);
-      // Combiner. We use the reducer as the combiner in this case.
-      //job.setCombinerClass(NGramCombiner.class);
       // Reducer
       job.setReducerClass(NGramReducer.class);
       // Outputs from the Mapper.
+      job.setMapOutputKeyClass(Text.class);
+      job.setMapOutputValueClass(IntWritable.class);
 
-      // Use 5 reducer
-      job.setNumReduceTasks(5);
-
-      job.setMapOutputKeyClass(IntWritable.class); // <key = docID, ...>
-      job.setMapOutputValueClass(Text.class); // <..., value = word>
+      // Use 1 reducer
+      //job.setNumReduceTasks(1);
       // Outputs from Reducer. It is sufficient to set only the following two properties
       // if the Mapper and Reducer has same key and value types. It is set separately for
       // elaboration.
-      job.setOutputKeyClass(IntWritable.class); // <key = docID, ...>
-      job.setOutputValueClass(Text.class); // <..., value = unigram[SPACE]frequency>
+      job.setOutputKeyClass(Text.class);
+      job.setOutputValueClass(IntWritable.class);
       // path to input in HDFS
       FileInputFormat.addInputPath(job, new Path(args[0]));
       // path to output in HDFS
